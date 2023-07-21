@@ -186,6 +186,13 @@ typedef enum vg_lite_cache_op {
 } 
 vg_lite_cache_op_t;
 
+typedef enum vg_lite_vidmem_pool
+{
+    VG_LITE_POOL_RESERVED_MEMORY1 = 0,
+    VG_LITE_POOL_RESERVED_MEMORY2 = 1,
+}
+vg_lite_vidmem_pool_t;
+
 struct vg_lite_kernel_context {
     /* Command buffer. */
     void                     *command_buffer[CMDBUF_COUNT];
@@ -286,6 +293,9 @@ typedef struct vg_lite_kernel_allocate
 
     /* Flag to indicate where to allocate memory  */
     uint32_t flags;
+
+    /* select reserved memory pool */
+    vg_lite_vidmem_pool_t pool;
 
     /* OUTPUT */
 
@@ -450,6 +460,8 @@ typedef struct vg_lite_kernel_flexa_info
 typedef struct vg_lite_kernel_mem
 {
     uint32_t bytes;
+
+    vg_lite_vidmem_pool_t pool;
 }
 vg_lite_kernel_mem_t;
 
