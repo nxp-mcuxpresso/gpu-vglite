@@ -193,7 +193,8 @@ typedef enum vg_lite_vidmem_pool
 }
 vg_lite_vidmem_pool_t;
 
-struct vg_lite_kernel_context {
+/* Context structure. */
+typedef struct vg_lite_kernel_context {
     /* Command buffer. */
     void                     *command_buffer[CMDBUF_COUNT];
     void                     *command_buffer_logical[CMDBUF_COUNT];
@@ -214,10 +215,8 @@ struct vg_lite_kernel_context {
     uint32_t                  power_context_physical;
     uint32_t                  power_context_size;
     uint32_t                  power_context_capacity;
-};
-    
-/* Context structure. */
-typedef struct vg_lite_kernel_context vg_lite_kernel_context_t;
+}
+vg_lite_kernel_context_t;
 
 typedef struct capabilities
 {
@@ -456,7 +455,8 @@ typedef struct vg_lite_kernel_flexa_info
     uint32_t                    stop_flag;
     uint32_t                    start_flag;
     uint32_t                    reset_flag;
-} vg_lite_kernel_flexa_info_t;
+}
+vg_lite_kernel_flexa_info_t;
 
 typedef struct vg_lite_kernel_mem
 {
@@ -503,7 +503,7 @@ vg_lite_kernel_export_memory_t;
 
 vg_lite_error_t vg_lite_kernel(vg_lite_kernel_command_t command, void * data);
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 #endif /* _vg_lite_kernel_h_ */
