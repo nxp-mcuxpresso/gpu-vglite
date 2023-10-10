@@ -404,6 +404,7 @@ static int split_node(struct heap_node *node, unsigned long size)
     return 0;
 }
 
+#if 0
 vg_lite_error_t
 static unmap_to_user(vg_lite_pointer logical, vg_lite_uint32_t size)
 {
@@ -592,6 +593,7 @@ vg_lite_error_t vg_lite_hal_dma_free(uint32_t size, void *logical, void *klogica
 
     return error;
 }
+#endif
 
 vg_lite_error_t vg_lite_hal_allocate(uint32_t size, void **memory)
 {
@@ -662,6 +664,9 @@ vg_lite_error_t vg_lite_hal_allocate_contiguous(unsigned long size, vg_lite_vidm
             *klogical = (uint8_t *)private_data->contiguous_klogical[pool] + pos->offset;
             *physical = vg_lite_hal_cpu_to_gpu(device->physical[pool]) + pos->offset;
 
+            /* Mark which pool the pos belong to */
+            pos->pool = pool;
+
             /* Update the heap free size. */
             device->heap[pool].free -= aligned_size;
 
@@ -674,9 +679,10 @@ vg_lite_error_t vg_lite_hal_allocate_contiguous(unsigned long size, vg_lite_vidm
     return VG_LITE_OUT_OF_MEMORY;
 }
 
-void vg_lite_hal_free_contiguous(void *memory_handle, vg_lite_vidmem_pool_t pool)
+void vg_lite_hal_free_contiguous(void *memory_handle)
 {
     struct heap_node *pos, *node;
+    vg_lite_vidmem_pool_t pool;
 
     /* Get pointer to node. */
     node = memory_handle;
@@ -686,6 +692,9 @@ void vg_lite_hal_free_contiguous(void *memory_handle, vg_lite_vidmem_pool_t pool
             printk("vg_lite: ignoring corrupted memory handle %p\n", memory_handle);
         return;
     }
+
+    /* Determine which pool the node belongs to */
+    pool = node->pool;
 
     /* Mark node as free. */
     node->status = 0;
@@ -1750,6 +1759,7 @@ static void unmap_contiguous_memory_from_kernel(void *klogical, uint64_t physica
 }
 #endif
 
+#if 0
 static int32_t rtc_wake_init(time64_t seconds)
 {
     vg_lite_error_t error = VG_LITE_SUCCESS;
@@ -1813,6 +1823,7 @@ void vg_lite_hal_pm_suspend(void)
         rtc_wake_exit();
     }
 }
+#endif
 
 int drv_open(struct inode *inode, struct file *file)
 {
