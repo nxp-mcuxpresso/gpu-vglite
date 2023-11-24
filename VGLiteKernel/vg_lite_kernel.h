@@ -33,7 +33,7 @@
 #define EVENT_MCU_BAD_WRITE    0x08000000
 #define EVENT_END              0
 
-#define MAX_CONTIGUOUS_SIZE 0x02000000
+#define MAX_CONTIGUOUS_SIZE 0x01000000
 
 #define VG_LITE_INFINITE    0xFFFFFFFF
 #define CMDBUF_COUNT        2
@@ -239,6 +239,8 @@ vg_lite_capabilities_t;
 
 typedef struct vg_lite_kernel_initialize
 {
+    /* INPUT */
+
     /* Command buffer size. */
     uint32_t command_buffer_size;
 
@@ -247,6 +249,12 @@ typedef struct vg_lite_kernel_initialize
 
     /* Tessellation buffer height. */
     int32_t tess_height;
+
+    /* Memory pool for command buffer. */
+    vg_lite_vidmem_pool_t command_buffer_pool;
+
+    /* Memory pool for tessellation buffer. */
+    vg_lite_vidmem_pool_t tess_buffer_pool;
 
     /* OUTPUT */
 
@@ -258,7 +266,7 @@ typedef struct vg_lite_kernel_initialize
 
     /* Allocated command buffer. */
     void * command_buffer[CMDBUF_COUNT];
-    
+
     /* GPU address for command buffer. */
     uint32_t command_buffer_gpu[CMDBUF_COUNT];
     
