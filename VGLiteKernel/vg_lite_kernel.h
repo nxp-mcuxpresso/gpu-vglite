@@ -2,6 +2,8 @@
 *
 *    Copyright (c) 2014 - 2022 Vivante Corporation
 *
+*    Copyright 2024 NXP
+*
 *    Permission is hereby granted, free of charge, to any person obtaining a
 *    copy of this software and associated documentation files (the "Software"),
 *    to deal in the Software without restriction, including without limitation
@@ -37,7 +39,9 @@
 #define EVENT_END              0
 #define EVENT_FRAME_END        1
 
+#ifndef MAX_CONTIGUOUS_SIZE
 #define MAX_CONTIGUOUS_SIZE 0x04000000
+#endif
 
 #define VG_LITE_INFINITE    0xFFFFFFFF
 
