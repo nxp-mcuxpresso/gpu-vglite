@@ -2,6 +2,8 @@
 *
 *    Copyright (c) 2014 - 2022 Vivante Corporation
 *
+*    Copyright 2024 NXP
+*
 *    Permission is hereby granted, free of charge, to any person obtaining a
 *    copy of this software and associated documentation files (the "Software"),
 *    to deal in the Software without restriction, including without limitation
@@ -179,7 +181,7 @@ void vg_lite_set_gpu_execute_state(vg_lite_gpu_execute_state_t state)
     device->gpu_execute_state = state;
 }
 
-vg_lite_error_t vg_lite_hal_allocate(unsigned long size, void **memory)
+vg_lite_error_t vg_lite_hal_allocate(uint32_t size, void **memory)
 {
     vg_lite_error_t error = VG_LITE_SUCCESS;
 
