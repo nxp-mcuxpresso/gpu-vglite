@@ -1,6 +1,9 @@
 /****************************************************************************
 *
 *    Copyright 2012 - 2023 Vivante Corporation, Santa Clara, California.
+*
+*    Copyright 2024 NXP
+*
 *    All Rights Reserved.
 *
 *    Permission is hereby granted, free of charge, to any person obtaining
@@ -2870,6 +2873,225 @@ uint32_t transform(vg_lite_point_t * result, vg_lite_float_t x, vg_lite_float_t 
     /* Success. */
     return 1;
 }
+
+#if (CHIPID==0x355 || CHIPID==0x255)
+#define UPDATE_BOUNDING_BOX(bbx, point)                                 \
+    do {                                                                \
+        if ((point).x < (bbx).x) {                                      \
+            (bbx).width += (bbx).x - (point).x;                         \
+            (bbx).x = (point).x;                                        \
+        }                                                               \
+        if ((point).y < (bbx).y) {                                      \
+            (bbx).height += (bbx).y - (point).y;                        \
+            (bbx).y = (point).y;                                        \
+        }                                                               \
+        if ((point).x > (bbx).x + (bbx).width)                          \
+            (bbx).width = (point).x - (bbx).x;                          \
+        if ((point).y > (bbx).y + (bbx).height)                         \
+            (bbx).height = (point).y - (bbx).y;                         \
+    } while(0)
+
+static vg_lite_error_t transform_bounding_box(vg_lite_rectangle_t *in_bbx,
+                                                     vg_lite_matrix_t *matrix,
+                                                     vg_lite_rectangle_t *clip,
+                                                     vg_lite_rectangle_t *out_bbx,
+                                                     vg_lite_point_t *origin)
+{
+    vg_lite_point_t temp;
+
+    memset(out_bbx, 0, sizeof(vg_lite_rectangle_t));
+
+    /* Transform image point (0, 0). */
+    if (!transform(&temp, 0.0f, 0.0f, matrix))
+        return VG_LITE_INVALID_ARGUMENT;
+    out_bbx->x = temp.x;
+    out_bbx->y = temp.y;
+
+    /* Provide position of the new origin to the caller if requested. */
+    if (origin != NULL) {
+        origin->x = temp.x;
+        origin->y = temp.y;
+    }
+
+    /* Transform image point (0, height). */
+    if (!transform(&temp, 0.0f, (vg_lite_float_t)in_bbx->height, matrix))
+        return VG_LITE_INVALID_ARGUMENT;
+    UPDATE_BOUNDING_BOX(*out_bbx, temp);
+
+    /* Transform image point (width, height). */
+    if (!transform(&temp, (vg_lite_float_t)in_bbx->width, (vg_lite_float_t)in_bbx->height, matrix))
+        return VG_LITE_INVALID_ARGUMENT;
+    UPDATE_BOUNDING_BOX(*out_bbx, temp);
+
+    /* Transform image point (width, 0). */
+    if (!transform(&temp, (vg_lite_float_t)in_bbx->width, 0.0f, matrix))
+        return VG_LITE_INVALID_ARGUMENT;
+    UPDATE_BOUNDING_BOX(*out_bbx, temp);
+
+    /* Clip is required */
+    if (clip) {
+        out_bbx->x = MAX(out_bbx->x, clip->x);
+        out_bbx->y = MAX(out_bbx->y, clip->y);
+        out_bbx->width = MIN((out_bbx->x + out_bbx->width), (clip->x + clip->width)) - out_bbx->x;
+        out_bbx->height = MIN((out_bbx->y + out_bbx->height), (clip->y + clip->height)) - out_bbx->y;
+    }
+
+    return VG_LITE_SUCCESS;
+}
+
+vg_lite_error_t set_interpolation_steps(vg_lite_buffer_t *target,
+                                        vg_lite_int32_t s_width,
+                                        vg_lite_int32_t s_height,
+                                        vg_lite_matrix_t *matrix,
+                                        vg_lite_uint8_t push_states,
+                                        vg_lite_float_t **steps)
+{
+    vg_lite_matrix_t    im;
+    vg_lite_rectangle_t src_bbx, bounding_box, clip;
+    vg_lite_float_t     xs[3], ys[3], cs[3];
+    vg_lite_error_t     error = VG_LITE_SUCCESS;
+    float               dx = 0.0f, dy = 0.0f;
+
+    #define ERR_LIMIT   0.0000610351562f
+
+    /* Get bounding box. */
+    memset(&src_bbx, 0, sizeof(vg_lite_rectangle_t));
+    memset(&clip, 0, sizeof(vg_lite_rectangle_t));
+    src_bbx.width       = (int32_t)s_width;
+    src_bbx.height      = (int32_t)s_height;
+
+    if (s_context.scissor_set) {
+        clip.x = s_context.scissor[0];
+        clip.y = s_context.scissor[1];
+        clip.width  = s_context.scissor[2];
+        clip.height = s_context.scissor[3];
+    } else {
+        clip.x = clip.y = 0;
+        clip.width  = s_context.rtbuffer->width;
+        clip.height = s_context.rtbuffer->height;
+    }
+    transform_bounding_box(&src_bbx, matrix, &clip, &bounding_box, NULL);
+    /* Compute inverse matrix. */
+    if (!inverse(&im, matrix))
+        return VG_LITE_INVALID_ARGUMENT;
+    /* Compute interpolation steps. */
+    /* X step */
+    xs[0] = im.m[0][0] / s_width;
+    xs[1] = im.m[1][0] / s_height;
+    xs[2] = im.m[2][0];
+    /* Y step */
+    ys[0] = im.m[0][1] / s_width;
+    ys[1] = im.m[1][1] / s_height;
+    ys[2] = im.m[2][1];
+    /* C step 2 */
+    cs[2] = 0.5f * (im.m[2][0] + im.m[2][1]) + im.m[2][2];
+
+    /* C step 0, 1*/
+    cs[0] = (0.5f * (im.m[0][0] + im.m[0][1]) + im.m[0][2] + dx) / s_width;
+    cs[1] = (0.5f * (im.m[1][0] + im.m[1][1]) + im.m[1][2] + dy) / s_height;
+
+    if (push_states) {
+        /* Set command buffer */
+        VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A18, (void *)&cs[0]));
+        VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A19, (void *)&cs[1]));
+        VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A1A, (void *)&cs[2]));
+        VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A1C, (void *)&xs[0]));
+        VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A1D, (void *)&xs[1]));
+        VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A1E, (void *)&xs[2]));
+        VG_LITE_RETURN_ERROR(push_state(&s_context, 0x0A1F, 0x00000001));
+        VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A20, (void *)&ys[0]));
+        VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A21, (void *)&ys[1]));
+        VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A22, (void *)&ys[2]));
+    } else {
+        /* Save the interpolation steps for later use */
+        if (!steps) {
+            return VG_LITE_INVALID_ARGUMENT;
+        }
+        steps[0][0] = xs[0];
+        steps[0][1] = xs[1];
+        steps[0][2] = xs[2];
+        steps[1][0] = ys[0];
+        steps[1][1] = ys[1];
+        steps[1][2] = ys[2];
+        steps[2][0] = cs[0];
+        steps[2][1] = cs[1];
+        steps[2][2] = cs[2];
+    }
+
+    return VG_LITE_SUCCESS;
+}
+
+vg_lite_error_t set_interpolation_steps_draw_paint(vg_lite_buffer_t* target,
+                                                   vg_lite_int32_t s_width,
+                                                   vg_lite_int32_t s_height,
+                                                   vg_lite_matrix_t* matrix)
+{
+    vg_lite_matrix_t    im;
+    vg_lite_rectangle_t src_bbx, bounding_box, clip;
+    vg_lite_float_t     xs[3], ys[3], cs[3];
+    vg_lite_error_t     error = VG_LITE_SUCCESS;
+    float               dx = 0.0f, dy = 0.0f;
+
+#define ERR_LIMIT   0.0000610351562f
+
+    /* Get bounding box. */
+    memset(&src_bbx, 0, sizeof(vg_lite_rectangle_t));
+    memset(&clip, 0, sizeof(vg_lite_rectangle_t));
+    src_bbx.width = (int32_t)s_width;
+    src_bbx.height = (int32_t)s_height;
+
+    if (s_context.scissor_set) {
+        clip.x = s_context.scissor[0];
+        clip.y = s_context.scissor[1];
+        clip.width = s_context.scissor[2];
+        clip.height = s_context.scissor[3];
+    }
+    else {
+        clip.x = clip.y = 0;
+        clip.width = s_context.rtbuffer->width;
+        clip.height = s_context.rtbuffer->height;
+    }
+    transform_bounding_box(&src_bbx, matrix, &clip, &bounding_box, NULL);
+    /* Compute inverse matrix. */
+    if (!inverse(&im, matrix))
+        return VG_LITE_INVALID_ARGUMENT;
+    /* Compute interpolation steps. */
+    /* X step */
+    xs[0] = im.m[0][0] / s_width;
+    xs[1] = im.m[1][0] / s_height;
+    xs[2] = im.m[2][0];
+    /* Y step */
+    ys[0] = im.m[0][1] / s_width;
+    ys[1] = im.m[1][1] / s_height;
+    ys[2] = im.m[2][1];
+    /* C step 2 */
+    cs[2] = 0.5f * (im.m[2][0] + im.m[2][1]) + im.m[2][2];
+
+    /* C step 0, 1*/
+    cs[0] = (0.5f * (im.m[0][0] + im.m[0][1]) + im.m[0][2] + dx) / s_width;
+    cs[1] = (0.5f * (im.m[1][0] + im.m[1][1]) + im.m[1][2] + dy) / s_height;
+
+    VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A04, (void*)&cs[0]));
+    VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A05, (void*)&cs[1]));
+    VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A06, (void*)&xs[0]));
+    VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A07, (void*)&xs[1]));
+    VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A08, (void*)&ys[0]));
+    VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A09, (void*)&ys[1]));
+    /* Set command buffer */
+    VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A18, (void*)&cs[0]));
+    VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A19, (void*)&cs[1]));
+    VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A1A, (void*)&cs[2]));
+    VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A1C, (void*)&xs[0]));
+    VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A1D, (void*)&xs[1]));
+    VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A1E, (void*)&xs[2]));
+    VG_LITE_RETURN_ERROR(push_state(&s_context, 0x0A1F, 0x00000001));
+    VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A20, (void*)&ys[0]));
+    VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A21, (void*)&ys[1]));
+    VG_LITE_RETURN_ERROR(push_state_ptr(&s_context, 0x0A22, (void*)&ys[2]));
+
+    return VG_LITE_SUCCESS;
+}
+#endif /* (CHIPID==0x355 || CHIPID==0x255) */
 
 /* Flush specific VG module. */
 static vg_lite_error_t flush_target(void)
