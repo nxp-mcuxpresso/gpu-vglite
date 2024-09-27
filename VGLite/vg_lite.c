@@ -4266,6 +4266,13 @@ vg_lite_error_t vg_lite_blit(vg_lite_buffer_t* target,
         }
     }
 #else
+#if (CHIPID==0x255)
+    vg_lite_float_t *steps[3];
+    steps[0] = x_step;
+    steps[1] = y_step;
+    steps[2] = c_step;
+    VG_LITE_RETURN_ERROR(set_interpolation_steps(source->width, source->height, matrix, 0, steps));
+#else
     if (filter == VG_LITE_FILTER_LINEAR)
     {
         /* Compute interpolation steps. */
@@ -4305,6 +4312,7 @@ vg_lite_error_t vg_lite_blit(vg_lite_buffer_t* target,
         c_step[1] = (0.5f * (inverse_matrix.m[1][0] + inverse_matrix.m[1][1]) + inverse_matrix.m[1][2]) / source->height;
         c_step[2] = 0.5f * (inverse_matrix.m[2][0] + inverse_matrix.m[2][1]) + inverse_matrix.m[2][2];
     }
+#endif
 #endif
 
 #if VG_SW_BLIT_PRECISION_OPT
@@ -5011,6 +5019,13 @@ vg_lite_error_t vg_lite_blit_rect(vg_lite_buffer_t* target,
         }
     }
 #else
+#if (CHIPID==0x255)
+    vg_lite_float_t *steps[3];
+    steps[0] = x_step;
+    steps[1] = y_step;
+    steps[2] = c_step;
+    VG_LITE_RETURN_ERROR(set_interpolation_steps(source->width, source->height, matrix, 0, steps));
+#else
     if (filter == VG_LITE_FILTER_LINEAR)
     {
         /* Compute interpolation steps. */
@@ -5050,6 +5065,7 @@ vg_lite_error_t vg_lite_blit_rect(vg_lite_buffer_t* target,
         c_step[1] = (0.5f * (inverse_matrix.m[1][0] + inverse_matrix.m[1][1]) + inverse_matrix.m[1][2]) / rect_h;
         c_step[2] = 0.5f * (inverse_matrix.m[2][0] + inverse_matrix.m[2][1]) + inverse_matrix.m[2][2];
     }
+#endif
 #endif
 
 #if VG_SW_BLIT_PRECISION_OPT
