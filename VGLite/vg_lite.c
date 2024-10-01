@@ -2992,8 +2992,7 @@ vg_lite_error_t compute_interpolation_steps(vg_lite_int32_t s_width,
     return VG_LITE_SUCCESS;
 }
 
-vg_lite_error_t set_interpolation_steps(vg_lite_buffer_t *target,
-                                        vg_lite_int32_t s_width,
+vg_lite_error_t set_interpolation_steps(vg_lite_int32_t s_width,
                                         vg_lite_int32_t s_height,
                                         vg_lite_matrix_t *matrix,
                                         vg_lite_uint8_t push_states,
@@ -3035,8 +3034,7 @@ vg_lite_error_t set_interpolation_steps(vg_lite_buffer_t *target,
     return VG_LITE_SUCCESS;
 }
 
-vg_lite_error_t set_interpolation_steps_draw_paint(vg_lite_buffer_t* target,
-                                                   vg_lite_int32_t s_width,
+vg_lite_error_t set_interpolation_steps_draw_paint(vg_lite_int32_t s_width,
                                                    vg_lite_int32_t s_height,
                                                    vg_lite_matrix_t* matrix)
 {

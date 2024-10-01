@@ -46,14 +46,12 @@ extern vg_lite_error_t check_compress(vg_lite_buffer_format_t format, vg_lite_co
 extern void get_format_bytes(vg_lite_buffer_format_t format, uint32_t* mul, uint32_t* div, uint32_t* bytes_align);
 extern vg_lite_error_t srcbuf_align_check(vg_lite_buffer_t* source);
 #if (CHIPID==0x355 || CHIPID==0x255)
-extern vg_lite_error_t set_interpolation_steps(vg_lite_buffer_t *target,
-                                               vg_lite_int32_t s_width,
+extern vg_lite_error_t set_interpolation_steps(vg_lite_int32_t s_width,
                                                vg_lite_int32_t s_height,
                                                vg_lite_matrix_t *matrix,
                                                vg_lite_uint8_t push_states,
                                                vg_lite_float_t **steps);
-extern vg_lite_error_t set_interpolation_steps_draw_paint(vg_lite_buffer_t* target,
-                                                          vg_lite_int32_t s_width,
+extern vg_lite_error_t set_interpolation_steps_draw_paint(vg_lite_int32_t s_width,
                                                           vg_lite_int32_t s_height,
                                                           vg_lite_matrix_t* matrix);
 #endif /* (CHIPID==0x355 || CHIPID==0x255) */
@@ -1334,7 +1332,7 @@ vg_lite_error_t vg_lite_draw_pattern(vg_lite_buffer_t *target,
 
     if (source->paintType == VG_LITE_PAINT_PATTERN)
     {
-        VG_LITE_RETURN_ERROR(set_interpolation_steps_draw_paint(target, source->width, source->height, &matrix));
+        VG_LITE_RETURN_ERROR(set_interpolation_steps_draw_paint(source->width, source->height, &matrix));
         /* enable pre-multiplied in image unit */
         VG_LITE_RETURN_ERROR(push_state(&s_context, 0x0A24, convert_source_format(source->format) |
             filter_mode | pattern_tile | conversion | src_premultiply_enable));
@@ -1348,7 +1346,7 @@ vg_lite_error_t vg_lite_draw_pattern(vg_lite_buffer_t *target,
     }
     else
     {
-        VG_LITE_RETURN_ERROR(set_interpolation_steps(target, source->width, source->height, &matrix, 1, NULL));
+        VG_LITE_RETURN_ERROR(set_interpolation_steps(source->width, source->height, &matrix, 1, NULL));
         /* enable pre-multiplied in image unit */
         VG_LITE_RETURN_ERROR(push_state(&s_context, 0x0A25, convert_source_format(source->format) |
             filter_mode | pattern_tile | conversion | src_premultiply_enable));
@@ -1777,7 +1775,7 @@ vg_lite_error_t vg_lite_draw_linear_grad(vg_lite_buffer_t * target,
     data = &lg_step_y_lin;
     VG_LITE_RETURN_ERROR(push_state(&s_context, 0x0A08,*(uint32_t*) data));
 
-    VG_LITE_RETURN_ERROR(set_interpolation_steps(target, source->width, source->height, matrix, 1, NULL));
+    VG_LITE_RETURN_ERROR(set_interpolation_steps(source->width, source->height, matrix, 1, NULL));
 
     /* enable pre-multiplied in image unit */
     VG_LITE_RETURN_ERROR(push_state(&s_context, 0x0A24, convert_source_format(source->format) |
@@ -2467,7 +2465,7 @@ vg_lite_error_t vg_lite_draw_radial_grad(vg_lite_buffer_t * target,
     VG_LITE_RETURN_ERROR(push_state(&s_context, 0x0A0A,*(uint32_t*) data));
     data = &rgStepXYRad;
     VG_LITE_RETURN_ERROR(push_state(&s_context, 0x0A0B,*(uint32_t*) data));
-    VG_LITE_RETURN_ERROR(set_interpolation_steps(target, source->width, source->height, matrix, 1, NULL));
+    VG_LITE_RETURN_ERROR(set_interpolation_steps(source->width, source->height, matrix, 1, NULL));
 
     /* enable pre-multiplied in image unit */
     VG_LITE_RETURN_ERROR(push_state(&s_context, 0x0A24, convert_source_format(source->format) |
