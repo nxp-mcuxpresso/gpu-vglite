@@ -1,0 +1,12 @@
+NXP Software Content Register
+
+Package: vglite
+Version: 4.0.90
+Outgoing License: MIT
+License File: LICENSE.txt
+Type of content: source code
+Description and comments: VeriSilicon's platform independent VGLite Graphics library
+Release Location: https://github.com/nxp-mcuxpresso/gpu-vglite
+Origin: 
+      VeriSilicon (MIT)
+      NXP (MIT)
