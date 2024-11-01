@@ -3,6 +3,8 @@
 *    Copyright 2012 - 2023 Vivante Corporation, Santa Clara, California.
 *    All Rights Reserved.
 *
+*    Copyright 2024 NXP
+*
 *    Permission is hereby granted, free of charge, to any person obtaining
 *    a copy of this software and associated documentation files (the
 *    'Software'), to deal in the Software without restriction, including
@@ -216,7 +218,7 @@ vg_lite_error_t vg_lite_get_transform_matrix(vg_lite_float_point4_t src, vg_lite
         for (j = i + 1; j < m; j++)
             if (MATRIX_FP_ABS(A[j * astep + i]) > MATRIX_FP_ABS(A[k * astep + i]))
                 k = j;
-        if (MATRIX_FP_ABS(A[k * astep + i]) < MATRIX_FP_EPS)
+        if (MATRIX_FP_ABS((double)A[k * astep + i]) < MATRIX_FP_EPS)
             return VG_LITE_INVALID_ARGUMENT;
         if (k != i)
         {
@@ -595,7 +597,7 @@ vg_lite_error_t vg_lite_create_masklayer(vg_lite_buffer_t* masklayer, vg_lite_ui
     masklayer->format = VG_LITE_A8;
     VG_LITE_RETURN_ERROR(vg_lite_allocate(masklayer));
 
-    VG_LITE_RETURN_ERROR(vg_lite_clear(masklayer, NULL, 0xFF << 24));
+    VG_LITE_RETURN_ERROR(vg_lite_clear(masklayer, NULL, (vg_lite_color_t)(0xFF << 24)));
 
     return error;
 #else
@@ -654,7 +656,7 @@ vg_lite_error_t vg_lite_blend_masklayer(
         VG_LITE_RETURN_ERROR(vg_lite_clear(dst_masklayer, &area, 0x0));
         break;
     case VG_LITE_FILL_MASK:
-        VG_LITE_RETURN_ERROR(vg_lite_clear(dst_masklayer, &area, 0xFF << 24));
+        VG_LITE_RETURN_ERROR(vg_lite_clear(dst_masklayer, &area, (vg_lite_color_t)(0xFF << 24)));
         break;
     case VG_LITE_SET_MASK:
         area.x = 0;
@@ -739,7 +741,7 @@ vg_lite_error_t vg_lite_render_masklayer(
         VG_LITE_RETURN_ERROR(vg_lite_draw(masklayer, path, fill_rule, matrix, VG_LITE_BLEND_NONE, 0));
         break;
     case VG_LITE_FILL_MASK:
-        VG_LITE_RETURN_ERROR(vg_lite_draw(masklayer, path, fill_rule, matrix, VG_LITE_BLEND_NONE, 0xFF << 24));
+        VG_LITE_RETURN_ERROR(vg_lite_draw(masklayer, path, fill_rule, matrix, VG_LITE_BLEND_NONE, (vg_lite_color_t)(0xFF << 24)));
         break;
     case VG_LITE_SET_MASK:
         VG_LITE_RETURN_ERROR(vg_lite_draw(masklayer, path, fill_rule, matrix, VG_LITE_BLEND_NONE, color << 24));
@@ -1299,7 +1301,7 @@ typedef struct {
 
 int colorToInt(float c, int maxc)
 {
-    return MIN(MAX((int)floor(c * (float)maxc + 0.5f), 0), maxc);
+    return MIN(MAX((int)floor((double)(c * (float)maxc + 0.5f)), 0), maxc);
 }
 
 float intToColor(unsigned int i, unsigned int maxi)

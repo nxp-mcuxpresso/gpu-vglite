@@ -3,6 +3,8 @@
 *    Copyright 2012 - 2023 Vivante Corporation, Santa Clara, California.
 *    All Rights Reserved.
 *
+*    Copyright 2024 NXP
+*
 *    Permission is hereby granted, free of charge, to any person obtaining
 *    a copy of this software and associated documentation files (the
 *    'Software'), to deal in the Software without restriction, including
@@ -596,7 +598,7 @@ void split_quad(float out1[6], float out2[6], float curve[6], float split) {
             ms, s, 0,
             ms2, 2 * ms * s, s2
         };
-        /* C = A ¡Á B */
+        /* C = A ï¿½ï¿½ B */
         for (uint8_t i = 0; i < 2; ++i) {
             for (size_t y = 0; y < 3; ++y)
                 for (size_t x = 0; x < 1; ++x)
@@ -618,7 +620,7 @@ void split_quad(float out1[6], float out2[6], float curve[6], float split) {
             0, ms, s,
             0, 0, 1
         };
-        /* C = A ¡Á B */
+        /* C = A ï¿½ï¿½ B */
         for (uint8_t i = 0; i < 2; ++i) {
             for (size_t y = 0; y < 3; ++y)
                 for (size_t x = 0; x < 1; ++x)
@@ -663,7 +665,7 @@ void split_cubic(float out1[8], float out2[8], float curve[8], float split) {
             ms2, 2 * ms * s, s2, 0,
             ms3, 3 * s * ms2, 3 * s2 * ms, s3
         };
-        /* C = A ¡Á B */
+        /* C = A ï¿½ï¿½ B */
         for (uint8_t i = 0; i < 2; ++i) {
             for (size_t y = 0; y < 4; ++y)
                 for (size_t x = 0; x < 1; ++x)
@@ -687,7 +689,7 @@ void split_cubic(float out1[8], float out2[8], float curve[8], float split) {
             0, 0, ms, s,
             0, 0, 0, 1
         };
-        /* C = A ¡Á B */
+        /* C = A ï¿½ï¿½ B */
         for (uint8_t i = 0; i < 2; ++i) {
             for (size_t y = 0; y < 4; ++y)
                 for (size_t x = 0; x < 1; ++x)
@@ -742,7 +744,7 @@ static vg_lite_error_t _flatten_quad_bezier(
     dy2 = v2[1] - v0[1];
     d1 = fabsf((v1[0] - v2[0]) * dy2 - (v1[1] - v2[1]) * dx2);
 
-    if (d1 * d1 < 0.25 * (dx2 * dx2 + dy2 * dy2)) {
+    if (d1 * d1 < 0.25f * (dx2 * dx2 + dy2 * dy2)) {
         float bound[4];
 
         bound[0] = MIN(v0[0], v2[0]);
@@ -996,7 +998,7 @@ static vg_lite_error_t _flatten_cubic_bezier(
             b = 6.f * alignedCurve[0] - 12.f * alignedCurve[2] + 6.f * alignedCurve[4];
             c = -3.f * alignedCurve[0] + 3.f * alignedCurve[2];
             rootNum = 0;
-            if (fabs(a) < 1e-12f) {  // linear solution
+            if (fabs((double)a) < 1e-12f) {  // linear solution
                 t = -c / b;
                 if (t > 1e-12f && t < 1.f - 1e-12f)
                     root[rootNum++] = t;
@@ -1004,10 +1006,10 @@ static vg_lite_error_t _flatten_cubic_bezier(
             else {   // quadtratic solution
                 b2ac = b * b - 4.f * a * c;
                 if (b2ac > 1e-12f) {
-                    t = (-b + (float)sqrt(b2ac)) / (2.f * a);
+                    t = (-b + (float)(sqrt((double)b2ac))) / (2.f * a);
                     if (t > 1e-12f && t < 1.f - 1e-12f)
                         root[rootNum++] = t;
-                    t = (-b - (float)sqrt(b2ac)) / (2.f * a);
+                    t = (-b - (float)(sqrt((double)b2ac))) / (2.f * a);
                     if (t > 1e-12f && t < 1.f - 1e-12f)
                         root[rootNum++] = t;
                 }
@@ -1050,20 +1052,18 @@ static vg_lite_error_t _flatten_cubic_bezier(
             }
         }
         else if (level == 0) {
-            vg_lite_float_t a1x, a1y, a2x, a2y, a3x, a3y;
+            vg_lite_float_t a1x, a1y, a2x, a2y;
             vg_lite_float_t ddf0, ddf1, t1, t2, upper_bound;
             vg_lite_uint32_t n;
             vg_lite_float_t pt[2];
-            a1x = 3 * (v1[0] - v0[0]);
-            a1y = 3 * (v1[1] - v0[1]);
-            a2x = 3 * (v0[0] - v1[0] - v1[0] + v2[0]);
-            a2y = 3 * (v0[1] - v1[1] - v1[1] + v2[1]);
-            a3x = 3 * (v1[0] - v2[0]) + v3[0] - v0[0];
-            a3y = 3 * (v1[1] - v2[1]) + v3[1] - v0[1];
+            a1x = 3 * (v0[0] - v1[0] - v1[0] + v2[0]);
+            a1y = 3 * (v0[1] - v1[1] - v1[1] + v2[1]);
+            a2x = 3 * (v1[0] - v2[0]) + v3[0] - v0[0];
+            a2y = 3 * (v1[1] - v2[1]) + v3[1] - v0[1];
 
-            ddf0 = a2x * a2x + a2y * a2y;
-            t1 = a2x + a3x + a3x + a3x;
-            t2 = a2y + a3y + a3y + a3y;
+            ddf0 = a1x * a1x + a1y * a1y;
+            t1 = a1x + a2x + a2x + a2x;
+            t2 = a1y + a2y + a2y + a2y;
             ddf1 = t1 * t1 + t2 * t2;
             upper_bound = ddf0 > ddf1 ? ddf0 : ddf1;
             upper_bound = SQRTF(upper_bound);
@@ -1746,14 +1746,13 @@ static vg_lite_error_t _flatten_path(
     int8_t* data_pointer_use = NULL;
     vg_lite_float_t sx, sy;
     vg_lite_float_t ox, oy;
-    vg_lite_float_t px, py;
     vg_lite_float_t x0, y0, x1, y1, x2, y2;
     vg_value_getter get_value = NULL;
 
     if (!stroke_conversion || !path)
         return VG_LITE_INVALID_ARGUMENT;
 
-    sx = sy = ox = oy = px = py = 0.0f;
+    sx = sy = ox = oy = 0.0f;
 
     prev_command = 0xFF;
 
@@ -1932,8 +1931,8 @@ static vg_lite_error_t _flatten_path(
                 point->length = 0.0f;
             }
 
-            px = ox = sx;
-            py = oy = sy;
+            ox = sx;
+            oy = sy;
 
             stroke_conversion->cur_list->closed = 1;
             stroke_conversion->closed = 1;
@@ -1958,8 +1957,8 @@ static vg_lite_error_t _flatten_path(
                 VG_LITE_ERROR_HANDLER(_create_new_point_list(stroke_conversion, x0, y0, vgcFLATTEN_NO));
             }
 
-            sx = px = ox = x0;
-            sy = py = oy = y0;
+            sx = ox = x0;
+            sy = oy = y0;
             break;
 
         case VLC_OP_LINE_REL:
@@ -1973,8 +1972,8 @@ static vg_lite_error_t _flatten_path(
             /* Add a point to subpath. */
             VG_LITE_ERROR_HANDLER(_add_point_to_point_list(stroke_conversion, x0, y0, vgcFLATTEN_NO));
 
-            px = ox = x0;
-            py = oy = y0;
+            ox = x0;
+            oy = y0;
             break;
 
         case VLC_OP_QUAD_REL:
@@ -2012,8 +2011,6 @@ static vg_lite_error_t _flatten_path(
 #endif
             }
 
-            px = x0;
-            py = y0;
             ox = x1;
             oy = y1;
             break;
@@ -2048,8 +2045,6 @@ static vg_lite_error_t _flatten_path(
 #endif
             }
 
-            px = x1;
-            py = y1;
             ox = x2;
             oy = y2;
             break;
@@ -3719,7 +3714,7 @@ static vg_lite_error_t _copy_stroke_path(
 
 #if (CHIPID==0x355)
     vg_lite_buffer_t buffer = { 0 };
-    uint32_t bytes;
+    uint32_t bytes = 0;
 #endif
 
     if (!stroke_conversion || !path)
@@ -4269,7 +4264,7 @@ static vg_lite_float_t _angle(
     int32_t sign;
 
     dot    = Ux * Vx + Uy * Vy;
-    length = SQRTF(Ux * Ux + Uy * Uy) * SQRTF(Vx * Vx + Vy * Vy);
+    length = SQRTF((double)(Ux * Ux + Uy * Uy)) * SQRTF((double)(Vx * Vx + Vy * Vy));
     sign   = (Ux * Vy - Uy * Vx < 0) ? -1 : 1;
     cosVal = dot / length;
     cosVal = CLAMP(cosVal, -1.0f, 1.0f);
@@ -4797,7 +4792,7 @@ vg_lite_error_t _convert_arc(
     /*******************************************************************
     ** Drawing.
     */
-    segs  = (int32_t) (CEILF(FABSF(thetaSpan) / (45.0f / 180.0f * PI)));
+    segs  = (int32_t) (CEILF((double)(FABSF((double)thetaSpan) / (45.0f / 180.0f * PI))));
 
     theta = thetaSpan / segs;
 
@@ -4836,8 +4831,8 @@ vg_lite_error_t _convert_arc(
         {
             theta1 += theta;
 
-            controlX = ax + COSF(theta1 - (theta / 2.0f)) * rx / COSF(theta / 2.0f);
-            controlY = ay + SINF(theta1 - (theta / 2.0f)) * ry / COSF(theta / 2.0f);
+            controlX = ax + COSF((double)(theta1 - (theta / 2.0f))) * rx / COSF((double)(theta / 2.0f));
+            controlY = ay + SINF((double)(theta1 - (theta / 2.0f))) * ry / COSF((double)(theta / 2.0f));
 
             anchorX = ax + COSF(theta1) * rx;
             anchorY = ay + SINF(theta1) * ry;

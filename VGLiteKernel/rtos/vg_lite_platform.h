@@ -2,6 +2,8 @@
 *
 *    Copyright (c) 2014 - 2022 Vivante Corporation
 *
+*    Copyright 2024 NXP
+*
 *    Permission is hereby granted, free of charge, to any person obtaining a
 *    copy of this software and associated documentation files (the "Software"),
 *    to deal in the Software without restriction, including without limitation
@@ -29,7 +31,6 @@
 #include "stdlib.h"
 #include <stdio.h>
 #include "../vg_lite_debug.h"
-#include "../vg_lite_type.h"
 #include "../vg_lite_option.h"
 
 #define _BAREMETAL 0

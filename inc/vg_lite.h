@@ -3,6 +3,8 @@
 *    Copyright 2012 - 2023 Vivante Corporation, Santa Clara, California.
 *    All Rights Reserved.
 *
+*    Copyright 2024 NXP
+*
 *    Permission is hereby granted, free of charge, to any person obtaining
 *    a copy of this software and associated documentation files (the
 *    'Software'), to deal in the Software without restriction, including
@@ -666,6 +668,7 @@ typedef unsigned int        vg_lite_color_t;
 
     typedef enum vg_lite_frame_flag
     {
+        VG_LITE_END_FLAG       = 0,
         VG_LITE_FRAME_END_FLAG = 1,
     } vg_lite_frame_flag_t;
 

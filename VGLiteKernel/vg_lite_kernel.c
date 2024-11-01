@@ -2,6 +2,8 @@
 *
 *    Copyright (c) 2014 - 2022 Vivante Corporation
 *
+*    Copyright 2024 NXP
+*
 *    Permission is hereby granted, free of charge, to any person obtaining a
 *    copy of this software and associated documentation files (the "Software"),
 *    to deal in the Software without restriction, including without limitation
@@ -26,6 +28,7 @@
 #include "vg_lite_kernel.h"
 #include "vg_lite_hal.h"
 #include "vg_lite_hw.h"
+#include "vg_lite_type.h"
 #if defined(__linux__) && !defined(EMULATOR)
 #include <linux/sched.h>
 /*#include <asm/uaccess.h>*/
