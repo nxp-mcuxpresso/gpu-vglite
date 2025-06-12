@@ -1,0 +1,64 @@
+{
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "spdxVersion": "SPDX-2.3",
+  "creationInfo": {
+    "created": "2025-06-12T02:23:37Z",
+    "creators": [
+      "Organization: NXP"
+    ],
+    "licenseListVersion": "3.20"
+  },
+  "name": "vglite-v25.06.00",
+  "dataLicense": "CC0-1.0",
+  "documentNamespace": "https://nxp.com/spdx/8e93f52d-6967-45c0-b6a6-9deca6506e23",
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-package-8e93f52d-6967-45c0-b6a6-9deca6506e23",
+      "name": "vglite",
+      "versionInfo": "v25.06.00",
+      "licenseConcluded": "(MIT)",
+      "licenseDeclared": "(MIT)",
+      "downloadLocation": "https://github.com/nxp-mcuxpresso/gpu-vglite",
+      "originator": "Organization: NXP",
+      "supplier": "NOASSERTION",
+      "externalRefs": [],
+      "filesAnalyzed": false
+    },
+    {
+      "SPDXID": "SPDXRef-package-027e3ac3-0142-4da4-b9bd-970052f53362",
+      "name": "lvgl/lvgl",
+      "versionInfo": "v9.2.0",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "homepage": "https://lvgl.io/",
+      "downloadLocation": "NOASSERTION",
+      "originator": "Organization: lvgl",
+      "supplier": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:github/lvgl/lvgl@v9.2.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "0c24a4a4-3156-48c5-a4ed-5d5a0a4cf49f",
+          "referenceType": "BlackDuck-ComponentOrigin"
+        }
+      ],
+      "filesAnalyzed": false
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-package-8e93f52d-6967-45c0-b6a6-9deca6506e23"
+    },
+    {
+      "spdxElementId": "SPDXRef-package-8e93f52d-6967-45c0-b6a6-9deca6506e23",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-package-027e3ac3-0142-4da4-b9bd-970052f53362"
+    }
+  ]
+}
