@@ -8,10 +8,10 @@ LICENSE.txt
 Makefile
 Makefile.def
 SBOM.spdx.json
-vendor
+vendor/
 VGLite/dumpAPI.c
 VGLite/vg_lite_dump.c
 vglite.map
-VGLiteKernel/linux
+VGLiteKernel/linux/
 VGLiteKernel/Makefile
 VGLiteKernel/vg_lite_debug.h
